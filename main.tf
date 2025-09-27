@@ -20,7 +20,6 @@ provider "azurerm" {
 }
 
 
-
 resource "azurerm_resource_group" "rg1" {
   name     = "ter-rg-001"
   location = "West Europe"
