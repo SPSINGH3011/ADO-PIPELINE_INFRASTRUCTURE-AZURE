@@ -1,0 +1,36 @@
+trigger: none
+
+pool: fresh-self-agent
+
+steps: 
+- task: TerraformInstaller@1
+  inputs:
+    terraformVersion: 'latest'
+- task: TerraformTask@5
+  displayName: terraform init
+  inputs:
+    provider: 'azurerm'
+    command: 'init'
+    backendServiceArm: 'fresh-serv-con'
+    backendAzureRmOverrideSubscriptionID: '790084ef-9e9f-4ebf-9120-98c5295aba2a'
+    backendAzureRmResourceGroupName: 'backend-rg'
+    backendAzureRmStorageAccountName: 'backendstoragedd'
+    backendAzureRmContainerName: 'backendcontainer'
+    backendAzureRmKey: 'terraform.tfstate'
+
+- task: TerraformTask@5
+  displayName: plan
+  inputs:
+    provider: 'azurerm'
+    command: 'plan'
+    environmentServiceNameAzureRM: 'fresh-serv-con'
+
+- task: TerraformTask@5
+  displayName: apply
+  inputs:
+    provider: 'azurerm'
+    command: 'apply'
+    commandOptions: '-auto-approve'
+    environmentServiceNameAzureRM: 'fresh-serv-con'
+
+

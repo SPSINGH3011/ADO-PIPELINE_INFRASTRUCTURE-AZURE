@@ -1,0 +1,57 @@
+resources:
+  repositories:
+  - repository: self
+    type: git
+    ref: refs/heads/main
+jobs:
+- job: Job_1
+  displayName: JOB1
+  pool:
+    name: fresh-self-agent
+  steps:
+  - checkout: self
+    clean: true
+    fetchTags: false
+  - task: PowerShell@2
+    displayName: PowerShell Script-Hello Devops
+    enabled: False
+    inputs:
+      targetType: inline
+      script: >
+        # Write your PowerShell commands here.
+
+
+        Write-Host "Hello Devops "
+  - task: PowerShell@2
+    displayName: PowerShell Script-Terraform install test
+    enabled: False
+    inputs:
+      targetType: inline
+      script: "# Check if Terraform is installed\n$terraform = Get-Command terraform -ErrorAction SilentlyContinue\n\nif ($terraform) {\n    Write-Host \"✅ Terraform is already installed at $($terraform.Source). Skipping installation...\"\n} \nelse {\n    Write-Host \"⚠️ Terraform not found. Installing now...\"\n\n    # Define version\n    $version = \"1.9.5\"   # Change to desired version\n\n    # Download Terraform zip\n    $zipPath = \"$env:TEMP\\terraform.zip\"\n    $url = \"https://releases.hashicorp.com/terraform/$version/terraform_${version}_windows_amd64.zip\"\n\n    Write-Host \"⬇️ Downloading Terraform $version from $url ...\"\n    Invoke-WebRequest -Uri $url -OutFile $zipPath\n\n    # Extract to C:\\terraform\n    $installPath = \"C:\\terraform\"\n    if (!(Test-Path $installPath)) {\n        New-Item -ItemType Directory -Path $installPath | Out-Null\n    }\n    Expand-Archive -Path $zipPath -DestinationPath $installPath -Force\n\n    # Add to PATH if not already present\n    $currentPath = [System.Environment]::GetEnvironmentVariable(\"Path\", \"Machine\")\n    if ($currentPath -notlike \"*$installPath*\") {\n        [System.Environment]::SetEnvironmentVariable(\"Path\", \"$currentPath;$installPath\", \"Machine\")\n        Write-Host \"\U0001F504 PATH updated. Please restart PowerShell or log out and log in again.\"\n    }\n\n    # Cleanup\n    Remove-Item $zipPath -Force\n\n    Write-Host \"✅ Terraform $version installed successfully at $installPath.\"\n}\n"
+- job: Job_2
+  displayName: JOB2
+  pool:
+    name: fresh-self-agent
+  steps:
+  - checkout: self
+    clean: true
+    fetchTags: false
+  - task: PowerShell@2
+    displayName: Terraform init
+    inputs:
+      targetType: inline
+      script: >
+        terraform init
+  - task: PowerShell@2
+    displayName: terraform plan
+    inputs:
+      targetType: inline
+      script: >
+        terraform plan
+  - task: PowerShell@2
+    displayName: terraform apply
+    inputs:
+      targetType: inline
+      script: >
+        terraform apply -auto-approve
+...
